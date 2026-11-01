@@ -1,4 +1,4 @@
-<!doctype html>
+f<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -175,9 +175,14 @@ async function launch() {
 
         const code = await response.text();
 
-        win.document.open();
-        win.document.write(code);
-        win.document.close();
+        const fixedCode = code.replace(
+    /<head([^>]*)>/i,
+    '<head$1><base href="https://fuzzby101.github.io/project1/">'
+);
+
+win.document.open();
+win.document.write(fixedCode);
+win.document.close();
     } catch (error) {
         win.close();
         alert("Could not load Project1.");
