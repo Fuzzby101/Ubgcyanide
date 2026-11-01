@@ -1,65 +1,197 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    background: #000;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.launchCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.launch-btn {
+    padding: 25px 60px;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    background: #444;
+    border: 2px solid #666;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.launch-btn:hover {
+    background: #555;
+    transform: scale(1.05);
+}
+
+.launch-btn.default {
+    border-color: #4ade80;
+    box-shadow: 0 0 16px rgba(74, 222, 128, 0.25);
+}
+
+#hint {
+    color: #777;
+    font-size: 12.5px;
+    text-align: center;
+}
+
+.toggleGroup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #aaa;
+    font-size: 14px;
+    user-select: none;
+}
+
+.toggleGroup span.active {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #555;
+    border-radius: 28px;
+    transition: 0.2s;
+}
+
+.slider::before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+input:checked + .slider {
+    background: #4ade80;
+}
+
+input:checked + .slider::before {
+    transform: translateX(24px);
+}
+</style>
+</head>
+
+<body>
+
+<div class="launchCol">
+    <button id="hub" class="launch-btn">Open Project1</button>
+
+    <label class="toggleGroup">
+        <span id="labelHub">Project1</span>
+        <span class="switch">
+            <input type="checkbox" id="hubToggle">
+            <span class="slider"></span>
+        </span>
+    </label>
+</div>
+
+<div id="hint">Enable switch to auto-open on next visit</div>
+
 <script>
 const SITE_URL = "https://fuzzby101.github.io/project1/";
-const SOURCE_URL = "https://raw.githubusercontent.com/Fuzzby101/project1/refs/heads/main/index.html";
-const PROJECT_KEY = "project1_autolaunch";
-const projectBtn = document.getElementById("project");
-const projectToggle = document.getElementById("projectToggle");
-const labelProject = document.getElementById("labelProject");
-function getEnabled(key, fallback) {
-    const v = localStorage.getItem(key);
-    return v === null ? fallback : v === "true";
+const KEY = "project1_autolaunch";
+
+const hubBtn = document.getElementById("hub");
+const hubToggle = document.getElementById("hubToggle");
+const labelHub = document.getElementById("labelHub");
+
+function getEnabled() {
+    const v = localStorage.getItem(KEY);
+    return v === null ? false : v === "true";
 }
-function setEnabled(key, value) {
-    localStorage.setItem(key, value);
+
+function setEnabled(value) {
+    localStorage.setItem(KEY, value);
 }
+
 function applyUI() {
-    const enabled = getEnabled(PROJECT_KEY, false);
-    projectToggle.checked = enabled;
-    labelProject.classList.toggle("active", enabled);
-    projectBtn.classList.toggle("default", enabled);
+    const enabled = getEnabled();
+
+    hubToggle.checked = enabled;
+    labelHub.classList.toggle("active", enabled);
+    hubBtn.classList.toggle("default", enabled);
 }
-projectToggle.addEventListener("change", () => {
-    setEnabled(PROJECT_KEY, projectToggle.checked);
+
+hubToggle.addEventListener("change", () => {
+    setEnabled(hubToggle.checked);
     applyUI();
-    flashSaved(labelProject);
+    flashSaved();
 });
-function flashSaved(labelEl) {
-    const original = "Cyanide";
-    labelEl.textContent = "Saved";
+
+function flashSaved() {
+    labelHub.textContent = "Saved";
+
     setTimeout(() => {
-        labelEl.textContent = original;
+        labelHub.textContent = "Project1";
     }, 900);
 }
+
 async function launch() {
     const win = window.open("about:blank", "_blank");
-    if (!win) {
-        alert("Pop-up blocked. Allow pop-ups and try again.");
-        return;
-    }
+
+    if (!win) return;
+
     try {
-        const response = await fetch(SOURCE_URL + "?v=" + Date.now());
-        if (!response.ok) {
-            throw Error("HTTP " + response.status);
-        }
-        let code = await response.text();
-        code = code.replace(
-            /<head([^>]*)>/i,
-            `<head$1><base href="${SITE_URL}">`
-        );
+        const response = await fetch(SITE_URL + "?v=" + Date.now());
+
+        if (!response.ok) throw new Error(response.status);
+
+        const code = await response.text();
+
         win.document.open();
         win.document.write(code);
         win.document.close();
-        win.document.title = "Cyanide";
     } catch (error) {
         win.close();
-        alert("Could not load Cyanide: " + error.message);
+        alert("Could not load Project1.");
     }
 }
-projectBtn.onclick = launch;
+
+hubBtn.onclick = launch;
+
 applyUI();
+
 window.onload = () => {
-    if (getEnabled(PROJECT_KEY, false)) {
-        launch();
-    }
+    if (getEnabled()) launch();
 };
 </script>
+
+</body>
+</html>
