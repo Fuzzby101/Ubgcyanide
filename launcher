@@ -1,4 +1,4 @@
-f<!doctype html>
+<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -15,6 +15,11 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 24px;
+}
+
+#buttons {
+    display: flex;
     gap: 24px;
 }
 
@@ -110,91 +115,80 @@ input:checked + .slider::before {
 
 <body>
 
-<div class="launchCol">
-    <button id="hub" class="launch-btn">Open Project1</button>
+<div id="buttons">
+    <div class="launchCol">
+        <button id="hub" class="launch-btn">Open Project1</button>
 
-    <label class="toggleGroup">
-        <span id="labelHub">Project1</span>
-        <span class="switch">
-            <input type="checkbox" id="hubToggle">
-            <span class="slider"></span>
-        </span>
-    </label>
+        <label class="toggleGroup">
+            <span id="labelHub">Project1</span>
+            <span class="switch">
+                <input type="checkbox" id="hubToggle">
+                <span class="slider"></span>
+            </span>
+        </label>
+    </div>
 </div>
 
 <div id="hint">Enable switch to auto-open on next visit</div>
 
 <script>
-const SITE_URL = "https://fuzzby101.github.io/project1/";
-const KEY = "project1_autolaunch";
+const HUB_URL = "https://raw.githubusercontent.com/Fuzzby101/project1/refs/heads/main/index.html";
+
+const HUB_KEY = "project1_autolaunch";
 
 const hubBtn = document.getElementById("hub");
 const hubToggle = document.getElementById("hubToggle");
 const labelHub = document.getElementById("labelHub");
 
-function getEnabled() {
-    const v = localStorage.getItem(KEY);
-    return v === null ? false : v === "true";
+function getEnabled(key, fallback) {
+    const v = localStorage.getItem(key);
+    return v === null ? fallback : v === "true";
 }
 
-function setEnabled(value) {
-    localStorage.setItem(KEY, value);
+function setEnabled(key, value) {
+    localStorage.setItem(key, value);
 }
 
 function applyUI() {
-    const enabled = getEnabled();
+    const hubOn = getEnabled(HUB_KEY, true);
 
-    hubToggle.checked = enabled;
-    labelHub.classList.toggle("active", enabled);
-    hubBtn.classList.toggle("default", enabled);
+    hubToggle.checked = hubOn;
+    labelHub.classList.toggle("active", hubOn);
+    hubBtn.classList.toggle("default", hubOn);
 }
 
 hubToggle.addEventListener("change", () => {
-    setEnabled(hubToggle.checked);
+    setEnabled(HUB_KEY, hubToggle.checked);
     applyUI();
-    flashSaved();
+    flashSaved(labelHub);
 });
 
-function flashSaved() {
-    labelHub.textContent = "Saved";
+function flashSaved(labelEl) {
+    const original = labelEl.textContent;
+    labelEl.textContent = "Saved";
 
     setTimeout(() => {
-        labelHub.textContent = "Project1";
+        labelEl.textContent = original;
     }, 900);
 }
 
-async function launch() {
+async function launch(url) {
     const win = window.open("about:blank", "_blank");
-
     if (!win) return;
 
-    try {
-        const response = await fetch(SITE_URL + "?v=" + Date.now());
+    const code = await fetch(url + "?v=" + Date.now()).then(r => r.text());
 
-        if (!response.ok) throw new Error(response.status);
-
-        const code = await response.text();
-
-        const fixedCode = code.replace(
-    /<head([^>]*)>/i,
-    '<head$1><base href="https://fuzzby101.github.io/project1/">'
-);
-
-win.document.open();
-win.document.write(fixedCode);
-win.document.close();
-    } catch (error) {
-        win.close();
-        alert("Could not load Project1.");
-    }
+    win.document.open();
+    win.document.write(code);
+    win.document.close();
 }
 
-hubBtn.onclick = launch;
+hubBtn.onclick = () => launch(HUB_URL);
 
 applyUI();
 
 window.onload = () => {
-    if (getEnabled()) launch();
+    if (getEnabled(HUB_KEY, true)) launch(HUB_URL);
 };
 </script>
 
