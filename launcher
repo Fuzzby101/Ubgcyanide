@@ -1,222 +1,65 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>Project1 MultiLauncher</title>
-
-<style>
-body {
-    margin: 0;
-    background: #000;
-    height: 100vh;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-}
-
-#buttons {
-    display: flex;
-    gap: 24px;
-}
-
-.launchCol {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-}
-
-.launch-btn {
-    padding: 25px 60px;
-    font-size: 28px;
-    font-weight: bold;
-    color: white;
-    background: #444;
-    border: 2px solid #666;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.launch-btn:hover {
-    background: #555;
-    transform: scale(1.05);
-}
-
-.launch-btn.default {
-    border-color: #4ade80;
-    box-shadow: 0 0 16px rgba(74, 222, 128, 0.25);
-}
-
-#hint {
-    color: #777;
-    font-size: 12.5px;
-    text-align: center;
-}
-
-.toggleGroup {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #aaa;
-    font-size: 14px;
-    user-select: none;
-}
-
-.toggleGroup span.active {
-    color: #4ade80;
-    font-weight: bold;
-}
-
-.switch {
-    position: relative;
-    width: 52px;
-    height: 28px;
-}
-
-.switch input {
-    display: none;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background: #555;
-    border-radius: 28px;
-    transition: 0.2s;
-}
-
-.slider::before {
-    content: "";
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    left: 3px;
-    top: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.2s;
-}
-
-input:checked + .slider {
-    background: #4ade80;
-}
-
-input:checked + .slider::before {
-    transform: translateX(24px);
-}
-</style>
-</head>
-
-<body>
-
-<div id="buttons">
-    <div class="launchCol">
-
-        <button id="project" class="launch-btn">
-            Open Project1
-        </button>
-
-        <label class="toggleGroup">
-            <span id="labelProject">Project1</span>
-
-            <span class="switch">
-                <input type="checkbox" id="projectToggle">
-                <span class="slider"></span>
-            </span>
-        </label>
-
-    </div>
-</div>
-
-<div id="hint">
-    Enable switch to auto-open on next visit
-</div>
-
 <script>
-const PROJECT_URL = "https://fuzzby101.github.io/project1/";
-
+const SITE_URL = "https://fuzzby101.github.io/project1/";
+const SOURCE_URL = "https://raw.githubusercontent.com/Fuzzby101/project1/refs/heads/main/index.html";
 const PROJECT_KEY = "project1_autolaunch";
-
 const projectBtn = document.getElementById("project");
 const projectToggle = document.getElementById("projectToggle");
 const labelProject = document.getElementById("labelProject");
-
 function getEnabled(key, fallback) {
     const v = localStorage.getItem(key);
     return v === null ? fallback : v === "true";
 }
-
 function setEnabled(key, value) {
     localStorage.setItem(key, value);
 }
-
 function applyUI() {
-    const projectOn = getEnabled(PROJECT_KEY, false);
-
-    projectToggle.checked = projectOn;
-
-    labelProject.classList.toggle("active", projectOn);
-    projectBtn.classList.toggle("default", projectOn);
+    const enabled = getEnabled(PROJECT_KEY, false);
+    projectToggle.checked = enabled;
+    labelProject.classList.toggle("active", enabled);
+    projectBtn.classList.toggle("default", enabled);
 }
-
 projectToggle.addEventListener("change", () => {
     setEnabled(PROJECT_KEY, projectToggle.checked);
     applyUI();
     flashSaved(labelProject);
 });
-
 function flashSaved(labelEl) {
-    const original = labelEl.textContent;
-
+    const original = "Cyanide";
     labelEl.textContent = "Saved";
-
     setTimeout(() => {
         labelEl.textContent = original;
     }, 900);
 }
-
-async function launch(url) {
+async function launch() {
     const win = window.open("about:blank", "_blank");
-
-    if (!win) return;
-
+    if (!win) {
+        alert("Pop-up blocked. Allow pop-ups and try again.");
+        return;
+    }
     try {
-        const response = await fetch(url + "?v=" + Date.now());
-
+        const response = await fetch(SOURCE_URL + "?v=" + Date.now());
         if (!response.ok) {
-            throw Error(response.status);
+            throw Error("HTTP " + response.status);
         }
-
-        const code = await response.text();
-
+        let code = await response.text();
+        code = code.replace(
+            /<head([^>]*)>/i,
+            `<head$1><base href="${SITE_URL}">`
+        );
         win.document.open();
         win.document.write(code);
         win.document.close();
-
+        win.document.title = "Cyanide";
     } catch (error) {
         win.close();
-        alert("Could not load Project1. Check your connection or browser restrictions.");
+        alert("Could not load Cyanide: " + error.message);
     }
 }
-
-projectBtn.onclick = () => launch(PROJECT_URL);
-
+projectBtn.onclick = launch;
 applyUI();
-
 window.onload = () => {
     if (getEnabled(PROJECT_KEY, false)) {
-        launch(PROJECT_URL);
+        launch();
     }
 };
 </script>
-
-</body>
-</html>
