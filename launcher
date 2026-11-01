@@ -141,7 +141,7 @@ input:checked + .slider::before {
 </div>
 
 <script>
-const PROJECT_URL = "https://fuzzby101.github.io/IXL-ela-arena/";
+const PROJECT_URL = "https://fuzzby101.github.io/project1/";
 
 const PROJECT_KEY = "project1_autolaunch";
 
