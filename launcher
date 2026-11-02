@@ -1,211 +1,270 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IXL | Dashboard</title>
+    <link rel="stylesheet" href="config/main.css" />
+    <script src="config/main.js" type="module"></script>
+    <style>
+        #title {
+            margin-bottom: 2px;
+        }
+        #title img {
+            display: block;
+            margin: 0 auto;
+        }
+        #subtitle {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
 <style>
-body {
-    margin: 0;
-    background: #000;
-    height: 100vh;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
+html, body {
+    background: transparent !important;
 }
-
-#buttons {
-    display: flex;
-    gap: 24px;
-}
-
-.launchCol {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-}
-
-.launch-btn {
-    padding: 25px 60px;
-    font-size: 28px;
-    font-weight: bold;
-    color: white;
-    background: #444;
-    border: 2px solid #666;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.launch-btn:hover {
-    background: #555;
-    transform: scale(1.05);
-}
-
-.launch-btn.default {
-    border-color: #4ade80;
-    box-shadow: 0 0 16px rgba(74, 222, 128, 0.25);
-}
-
-#hint {
-    color: #777;
-    font-size: 12.5px;
-    text-align: center;
-}
-
-.toggleGroup {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #aaa;
-    font-size: 14px;
-    user-select: none;
-}
-
-.toggleGroup span.active {
-    color: #4ade80;
-    font-weight: bold;
-}
-
-.switch {
-    position: relative;
-    width: 52px;
-    height: 28px;
-}
-
-.switch input {
-    display: none;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
+body::before {
+    content: '';
+    position: fixed;
     inset: 0;
-    background: #555;
-    border-radius: 28px;
-    transition: 0.2s;
-}
-
-.slider::before {
-    content: "";
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    left: 3px;
-    top: 3px;
-    background: white;
-    border-radius: 50%;
-    transition: 0.2s;
-}
-
-input:checked + .slider {
-    background: #4ade80;
-}
-
-input:checked + .slider::before {
-    transform: translateX(24px);
+    z-index: -1;
+    background: #12142a url('background.gif') center/cover no-repeat;
 }
 </style>
-</head>
-
-<body>
-
-<div id="buttons">
-    <div class="launchCol">
-        <button id="hub" class="launch-btn">Open Project1</button>
-
-        <label class="toggleGroup">
-            <span id="labelHub">Project1</span>
-            <span class="switch">
-                <input type="checkbox" id="hubToggle">
-                <span class="slider"></span>
-            </span>
-        </label>
-    </div>
-</div>
-
-<div id="hint">Enable switch to auto-open on next visit</div>
-
-<script>
-const HUB_URL = "https://raw.githubusercontent.com/Fuzzby101/project1/refs/heads/main/index.html";
-
-const HUB_KEY = "project1_autolaunch";
-
-const hubBtn = document.getElementById("hub");
-const hubToggle = document.getElementById("hubToggle");
-const labelHub = document.getElementById("labelHub");
-
-function getEnabled(key, fallback) {
-    const v = localStorage.getItem(key);
-    return v === null ? fallback : v === "true";
+<style>
+#xpbar {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 50;
+    font: 14px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;
+    --s: #fff;
+    --ink: #161a2e;
+    --mu: #6a7090;
+    --ln: #dde0ec;
+    --ac: #2f4bff;
+    --acink: #fff;
+    --xp: #ffb400;
+    --bg: #eef0f6;
 }
-
-function setEnabled(key, value) {
-    localStorage.setItem(key, value);
-}
-
-function applyUI() {
-    const hubOn = getEnabled(HUB_KEY, true);
-
-    hubToggle.checked = hubOn;
-    labelHub.classList.toggle("active", hubOn);
-    hubBtn.classList.toggle("default", hubOn);
-}
-
-hubToggle.addEventListener("change", () => {
-    setEnabled(HUB_KEY, hubToggle.checked);
-    applyUI();
-    flashSaved(labelHub);
-});
-
-function flashSaved(labelEl) {
-    const original = labelEl.textContent;
-    labelEl.textContent = "Saved";
-
-    setTimeout(() => {
-        labelEl.textContent = original;
-    }, 900);
-}
-
-async function launch(url) {
-    const win = window.open("about:blank", "_blank");
-    if (!win) return;
-
-    try {
-        const response = await fetch(url + "?v=" + Date.now());
-
-        if (!response.ok) throw new Error(response.status);
-
-        let code = await response.text();
-
-        code = code.replace(
-            /<head([^>]*)>/i,
-            '<head$1><base href="https://fuzzby101.github.io/project1/">'
-        );
-
-        win.document.open();
-        win.document.write(code);
-        win.document.close();
-
-    } catch (error) {
-        win.close();
-        alert("Project1 failed to load: " + error.message);
+@media(prefers-color-scheme:dark) {
+    #xpbar {
+        --s: #1b1e3a;
+        --ink: #eef0ff;
+        --mu: #9298c0;
+        --ln: #2c3055;
+        --ac: #7c8dff;
+        --acink: #10132c;
+        --bg: #12142a;
     }
 }
-
-hubBtn.onclick = () => launch(HUB_URL);
-
-applyUI();
-
-window.onload = () => {
-    if (getEnabled(HUB_KEY, true)) launch(HUB_URL);
-};
+#xpbtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--s);
+    color: var(--ink);
+    border: 1px solid var(--ln);
+    border-radius: 99px;
+    padding: 5px 12px 5px 5px;
+    cursor: pointer;
+    font: inherit;
+    max-width: 200px;
+}
+#xpbtn:hover {
+    border-color: var(--ac);
+}
+#xpbtn:focus-visible,
+#xpmenu a:focus-visible {
+    outline: 3px solid var(--xp);
+    outline-offset: 2px;
+}
+#xpLvl {
+    background: var(--ac);
+    color: var(--acink);
+    border-radius: 99px;
+    min-width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    padding: 0 6px;
+}
+#xpName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+#xpmenu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 240px;
+    background: var(--s);
+    color: var(--ink);
+    border: 1px solid var(--ln);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+}
+#xpmenu[hidden] {
+    display: none;
+}
+#xpmenu strong {
+    display: block;
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#xpmenu .mu {
+    color: var(--mu);
+    font-size: .85rem;
+}
+#xpmenu .bar {
+    height: 10px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 10px 0 4px;
+}
+#xpmenu .bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--xp);
+    border-radius: 99px;
+}
+#xpmenu a {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--ln);
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+}
+#xpmenu a.p {
+    background: var(--ac);
+    color: var(--acink);
+    border-color: var(--ac);
+}
+</style>
+<div id="xpbar">
+    <button id="xpbtn" aria-haspopup="true" aria-expanded="false" aria-controls="xpmenu">
+        <span id="xpLvl">?</span>
+        <span id="xpName">Log in</span>
+    </button>
+    <div id="xpmenu" hidden>
+        <strong id="mName">Not on the board yet</strong>
+        <span class="mu" id="mSub">
+            Play a game to earn XP and get a rank.
+        </span>
+        <div class="bar">
+            <i id="mFill"></i>
+        </div>
+        <span class="mu" id="mXp"></span>
+        <a class="p" id="mLb" href="games-xp.html">
+            Leaderboard
+        </a>
+        <a id="mPlay" href="games-xp.html">
+            Play games
+        </a>
+    </div>
+</div>
+<script>
+(function() {
+    var KEY = 'gamehub-v1';
+    var $ = function(id) {
+        return document.getElementById(id);
+    };
+    var xpFor = function(n) {
+        return 50 * n * (n - 1);
+    };
+    var lvlOf = function(xp) {
+        return Math.floor((1 + Math.sqrt(1 + xp / 12.5)) / 2);
+    };
+    function paint() {
+        var me = {};
+        try {
+            me = JSON.parse(localStorage.getItem(KEY)) || {};
+        } catch(e) {}
+        if (!me.id) {
+            $('xpLvl').textContent = '?';
+            $('xpName').textContent = 'Log in';
+            $('mName').textContent = 'Not logged in';
+            $('mSub').textContent =
+                'Log in or sign up to earn XP and get on the leaderboard.';
+            $('mFill').style.width = '0%';
+            $('mXp').textContent = '';
+            return;
+        }
+        var total = me.total || 0;
+        var lvl = lvlOf(total);
+        var lo = xpFor(lvl);
+        var hi = xpFor(lvl + 1);
+        $('xpLvl').textContent = lvl;
+        $('xpName').textContent = me.name || 'Player';
+        $('mName').textContent = me.name || 'Player';
+        $('mSub').textContent =
+            'Level ' + lvl +
+            (me.streak ? ' · ' + me.streak + '-day streak' : '');
+        $('mFill').style.width =
+            Math.round((total - lo) / (hi - lo) * 100) + '%';
+        $('mXp').textContent =
+            (total - lo) + ' / ' + (hi - lo) +
+            ' XP to level ' + (lvl + 1);
+    }
+    function toggle(open) {
+        $('xpmenu').hidden = !open;
+        $('xpbtn').setAttribute('aria-expanded', open);
+        if (open) paint();
+    }
+    $('xpbtn').onclick = function(e) {
+        e.stopPropagation();
+        toggle($('xpmenu').hidden);
+    };
+    document.addEventListener('click', function(e) {
+        if (!$('xpbar').contains(e.target)) {
+            toggle(false);
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') toggle(false);
+    });
+    window.addEventListener('storage', paint);
+    paint();
+})();
 </script>
-
+<div class="center">
+    <h1 id="title">
+        <img
+            src="cyanide.png"
+            alt="cyanide"
+            style="max-width: 400px; width: 100%; height: auto;"
+        />
+    </h1>
+    <p id="subtitle">v1</p>
+</div>
+<div class="center">
+    <input
+        type="text"
+        id="searchInput"
+        placeholder="Search games"
+    />
+</div>
+<div id="gamesContainer"></div>
+<div class="footer">
+    <a style="font-weight: 700">a site by </a>
+    <a
+        style="font-weight: 700"
+        class="link"
+        href="https://dsc.gg"
+    >parcoil network</a>
+</div>
 </body>
 </html>
