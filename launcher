@@ -176,11 +176,26 @@ async function launch(url) {
     const win = window.open("about:blank", "_blank");
     if (!win) return;
 
-    const code = await fetch(url + "?v=" + Date.now()).then(r => r.text());
+    try {
+        const response = await fetch(url + "?v=" + Date.now());
 
-    win.document.open();
-    win.document.write(code);
-    win.document.close();
+        if (!response.ok) throw new Error(response.status);
+
+        let code = await response.text();
+
+        code = code.replace(
+            /<head([^>]*)>/i,
+            '<head$1><base href="https://fuzzby101.github.io/project1/">'
+        );
+
+        win.document.open();
+        win.document.write(code);
+        win.document.close();
+
+    } catch (error) {
+        win.close();
+        alert("Project1 failed to load: " + error.message);
+    }
 }
 
 hubBtn.onclick = () => launch(HUB_URL);
