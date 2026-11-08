@@ -10,9 +10,7 @@
     <script src="config/main.js" type="module"></script>
 
     <style>
-        #title {
-            margin-bottom: 2px;
-        }
+        #title { margin-bottom: 2px; }
 
         #title img {
             display: block;
@@ -79,9 +77,7 @@
             max-width: 200px;
         }
 
-        #xpbtn:hover {
-            border-color: var(--ac);
-        }
+        #xpbtn:hover { border-color: var(--ac); }
 
         #xpbtn:focus-visible,
         #xpmenu a:focus-visible {
@@ -123,9 +119,7 @@
             box-shadow: 0 8px 24px rgba(0,0,0,.15);
         }
 
-        #xpmenu[hidden] {
-            display: none;
-        }
+        #xpmenu[hidden] { display: none; }
 
         #xpmenu strong {
             display: block;
@@ -219,11 +213,10 @@
             color: white;
             font-size: 19px;
             cursor: pointer;
+            text-decoration: none;
         }
 
-        #notificationBtn:hover {
-            background: #30345c;
-        }
+        #notificationBtn:hover { background: #30345c; }
 
         #notificationBtn:focus-visible {
             outline: 3px solid #ffb400;
@@ -241,13 +234,7 @@
             text-shadow: 0 2px 5px rgba(0,0,0,.7);
         }
 
-        #announcements {
-            display: none;
-            max-width: 900px;
-            margin: 15px auto;
-            color: white;
-        }
-
+        #announcements,
         #communityEvent {
             display: none;
             max-width: 900px;
@@ -284,9 +271,7 @@
             transition: transform .2s ease;
         }
 
-        .recentGame:hover {
-            transform: translateY(-3px);
-        }
+        .recentGame:hover { transform: translateY(-3px); }
 
         .recentGame:focus-visible {
             outline: 3px solid #4b87f7;
@@ -301,9 +286,7 @@
             border-radius: 10px;
         }
 
-        .recentGame p {
-            margin: 6px 0;
-        }
+        .recentGame p { margin: 6px 0; }
 
         #gamesHeading {
             text-align: center;
@@ -316,13 +299,8 @@
                 right: 8px;
             }
 
-            #xpbtn {
-                max-width: 155px;
-            }
-
-            #xpmenu {
-                width: 230px;
-            }
+            #xpbtn { max-width: 155px; }
+            #xpmenu { width: 230px; }
 
             #notificationBar {
                 top: 8px;
@@ -341,7 +319,6 @@
             id="notificationBtn"
             aria-label="Notifications"
             title="Notifications"
-            style="text-decoration:none;"
         >🔔</a>
     </div>
 
@@ -379,9 +356,7 @@
 
             <span class="mu" id="mXp"></span>
 
-            <a class="p" href="games-xp.html">
-                Leaderboard
-            </a>
+            <a class="p" href="games-xp.html">Leaderboard</a>
 
             <div class="menuDivider"></div>
 
@@ -437,10 +412,7 @@
     <div id="welcomeMessage"></div>
 
     <!-- Community event -->
-    <section
-        id="communityEvent"
-        aria-label="Community event"
-    ></section>
+    <section id="communityEvent" aria-label="Community event"></section>
 
     <!-- Recently played -->
     <section id="recentlyPlayed">
@@ -473,15 +445,19 @@
         >parcoil network</a>
     </div>
 
-    <!-- XP menu and homepage functionality -->
     <script>
     (function() {
-        var KEY = 'gamehub-v1';
-        var RECENT_KEY = 'cyanide-recently-played';
+        'use strict';
 
-        var $ = function(id) {
-            return document.getElementById(id);
-        };
+        const KEY = 'gamehub-v1';
+        const RECENT_KEY = 'cyanide-recently-played';
+
+        const SHEET_URL =
+            'https://script.google.com/macros/s/AKfycbzBCe_-EP3W0D_RHSXCflM2Z_Wp1U57SttVYuE9V2wpcS9GqbXhlCXeDrBkNq2v_jA/exec';
+
+        const $ = id => document.getElementById(id);
+
+        let accountSyncing = false;
 
         function getAccount() {
             try {
@@ -499,14 +475,70 @@
                 '';
         }
 
+        /* Retrieve the current account from the existing backend. */
+        async function syncAccount() {
+            if (accountSyncing) return;
+
+            const me = getAccount();
+
+            if (!me.id || !me.secret) {
+                paint();
+                return;
+            }
+
+            accountSyncing = true;
+
+            try {
+                const response = await fetch(SHEET_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        fn: 'me',
+                        id: me.id,
+                        secret: me.secret
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Account request failed');
+                }
+
+                const result = await response.json();
+
+                if (!result.ok) {
+                    throw new Error(
+                        result.error || 'Account request failed'
+                    );
+                }
+
+                if (result.data && typeof result.data === 'object') {
+                    Object.assign(me, result.data);
+
+                    localStorage.setItem(
+                        KEY,
+                        JSON.stringify(me)
+                    );
+                }
+
+            } catch(error) {
+                console.error('Could not sync account:', error);
+            } finally {
+                accountSyncing = false;
+                paint();
+            }
+        }
+
+        /* Recently Played storage is separated by account ID. */
         function getRecentKey() {
-            var me = getAccount();
+            const me = getAccount();
             return RECENT_KEY + ':' + (me.id || 'guest');
         }
 
         function readRecent() {
             try {
-                var recent = JSON.parse(
+                const recent = JSON.parse(
                     localStorage.getItem(getRecentKey())
                 );
 
@@ -516,9 +548,8 @@
             }
         }
 
-        /* Recently Played */
         function saveRecent(game) {
-            var recent = readRecent();
+            let recent = readRecent();
 
             recent = recent.filter(function(item) {
                 return item.name !== game.name;
@@ -538,19 +569,22 @@
                     JSON.stringify(recent)
                 );
             } catch(e) {
-                console.warn('Could not save recently played games:', e);
+                console.warn(
+                    'Could not save recently played games:',
+                    e
+                );
             }
 
             renderRecentlyPlayed();
         }
 
         function renderRecentlyPlayed() {
-            var container = $('recentGamesContainer');
-            var section = $('recentlyPlayed');
+            const container = $('recentGamesContainer');
+            const section = $('recentlyPlayed');
 
             if (!container || !section) return;
 
-            var recent = readRecent();
+            const recent = readRecent();
 
             container.innerHTML = '';
 
@@ -562,7 +596,8 @@
             section.style.display = 'block';
 
             recent.forEach(function(game) {
-                var card = document.createElement('div');
+                const card = document.createElement('div');
+
                 card.className = 'recentGame';
                 card.tabIndex = 0;
                 card.setAttribute('role', 'button');
@@ -571,25 +606,23 @@
                     'Play ' + game.name
                 );
 
-                var img = document.createElement('img');
+                const img = document.createElement('img');
                 img.src = game.image;
                 img.alt = game.name;
 
-                var name = document.createElement('p');
+                const name = document.createElement('p');
                 name.textContent = game.name;
 
                 card.appendChild(img);
                 card.appendChild(name);
 
                 function replayGame() {
-                    var gameImages = document.querySelectorAll(
+                    const images = document.querySelectorAll(
                         '#gamesContainer .game img'
                     );
 
-                    var original = Array.from(gameImages).find(
-                        function(image) {
-                            return image.alt === game.name;
-                        }
+                    const original = Array.from(images).find(
+                        image => image.alt === game.name
                     );
 
                     if (original) {
@@ -611,11 +644,11 @@
         }
 
         /*
-         * Capture game-card clicks before the existing main.js
-         * click handler launches the game.
+         * Capture game clicks before the main.js game handler.
+         * This does not change the game's XP-awarding behavior.
          */
         document.addEventListener('click', function(e) {
-            var image = e.target.closest(
+            const image = e.target.closest(
                 '#gamesContainer .game img'
             );
 
@@ -627,21 +660,21 @@
             });
         }, true);
 
-        /* XP calculations */
-        var xpFor = function(n) {
+        /* Existing XP calculations */
+        function xpFor(n) {
             return 50 * n * (n - 1);
-        };
+        }
 
-        var lvlOf = function(xp) {
+        function lvlOf(xp) {
             return Math.floor(
                 (1 + Math.sqrt(1 + xp / 12.5)) / 2
             );
-        };
+        }
 
-        /* Account and XP display */
+        /* Update homepage account information. */
         function paint() {
-            var me = getAccount();
-            var name = getAccountName(me);
+            const me = getAccount();
+            const name = getAccountName(me);
 
             renderRecentlyPlayed();
 
@@ -663,21 +696,25 @@
                 return;
             }
 
-            var total = Number(me.total) || 0;
-            var lvl = lvlOf(total);
-            var lo = xpFor(lvl);
-            var hi = xpFor(lvl + 1);
+            const total = Number(me.total) || 0;
+            const lvl = lvlOf(total);
+            const lo = xpFor(lvl);
+            const hi = xpFor(lvl + 1);
+
+            const displayName = name || (
+                accountSyncing ? 'Loading...' : 'Username unavailable'
+            );
 
             $('xpLvl').textContent = lvl;
-            $('xpName').textContent = name || 'Account';
+            $('xpName').textContent = displayName;
 
-            $('mName').textContent = name || 'Account';
+            $('mName').textContent = displayName;
 
             $('mSub').textContent =
                 'Level ' + lvl +
                 (me.streak ? ' · ' + me.streak + '-day streak' : '');
 
-            var progress = Math.max(
+            const progress = Math.max(
                 0,
                 Math.min(
                     100,
@@ -691,7 +728,7 @@
                 (total - lo) + ' / ' + (hi - lo) +
                 ' XP to level ' + (lvl + 1);
 
-            $('menuAccount').textContent = name || 'Account';
+            $('menuAccount').textContent = displayName;
 
             $('welcomeMessage').textContent = name
                 ? 'Welcome back, ' + name + '!'
@@ -700,7 +737,7 @@
             $('welcomeMessage').style.display = 'block';
         }
 
-        /* XP menu */
+        /* XP dropdown behavior */
         function toggle(open) {
             $('xpmenu').hidden = !open;
 
@@ -709,7 +746,10 @@
                 String(open)
             );
 
-            if (open) paint();
+            if (open) {
+                paint();
+                syncAccount();
+            }
         }
 
         $('xpbtn').addEventListener('click', function(e) {
@@ -735,11 +775,19 @@
             }
         });
 
-        /* Refresh account information when it changes */
-        window.addEventListener('storage', paint);
-        window.addEventListener('focus', paint);
+        /* Refresh account details when another page updates them. */
+        window.addEventListener('storage', function(e) {
+            if (!e.key || e.key === KEY) {
+                syncAccount();
+            }
+        });
 
+        window.addEventListener('focus', syncAccount);
+
+        /* Initial homepage setup */
         paint();
+        syncAccount();
+
     })();
     </script>
 
