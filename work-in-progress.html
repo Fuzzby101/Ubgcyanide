@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyanide | Under Construction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            min-height: 100%;
+            background: #12142a;
+            font-family: system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .wip-image {
+            width: 100%;
+            height: 100vh;
+            object-fit: contain;
+        }
+
+        .home-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 11px 24px;
+            border-radius: 10px;
+            background: #4b87f7;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            z-index: 5;
+            transition: background .2s;
+        }
+
+        .home-button:hover {
+            background: #3269d6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <img
+        class="wip-image"
+        src="cyanide-wip.png"
+        alt="Cyanide feature under construction"
+    >
+
+    <a class="home-button" href="index.html">
+        Back to Cyanide
+    </a>
+
+</body>
+</html>
