@@ -1,270 +1,538 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IXL | Dashboard</title>
-    <link rel="stylesheet" href="config/main.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyanide</title>
+
+    <link rel="stylesheet" href="config/main.css">
     <script src="config/main.js" type="module"></script>
+
     <style>
         #title {
             margin-bottom: 2px;
         }
+
         #title img {
             display: block;
             margin: 0 auto;
         }
+
         #subtitle {
             margin-top: 0;
             margin-bottom: 15px;
         }
+
+        html, body {
+            background: transparent !important;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: #12142a url('background.gif') center/cover no-repeat;
+        }
+
+        /* Existing top-right menu and XP button */
+        #xpbar {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 100;
+            font: 14px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;
+            --s: #fff;
+            --ink: #161a2e;
+            --mu: #6a7090;
+            --ln: #dde0ec;
+            --ac: #2f4bff;
+            --acink: #fff;
+            --xp: #ffb400;
+            --bg: #eef0f6;
+        }
+
+        @media(prefers-color-scheme:dark) {
+            #xpbar {
+                --s: #1b1e3a;
+                --ink: #eef0ff;
+                --mu: #9298c0;
+                --ln: #2c3055;
+                --ac: #7c8dff;
+                --acink: #10132c;
+                --bg: #12142a;
+            }
+        }
+
+        #xpbtn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--s);
+            color: var(--ink);
+            border: 1px solid var(--ln);
+            border-radius: 99px;
+            padding: 5px 12px 5px 5px;
+            cursor: pointer;
+            font: inherit;
+            max-width: 200px;
+        }
+
+        #xpbtn:hover {
+            border-color: var(--ac);
+        }
+
+        #xpbtn:focus-visible,
+        #xpmenu a:focus-visible {
+            outline: 3px solid var(--xp);
+            outline-offset: 2px;
+        }
+
+        #xpLvl {
+            background: var(--ac);
+            color: var(--acink);
+            border-radius: 99px;
+            min-width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            padding: 0 6px;
+        }
+
+        #xpName {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        #xpmenu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 8px);
+            width: 250px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--s);
+            color: var(--ink);
+            border: 1px solid var(--ln);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+        }
+
+        #xpmenu[hidden] {
+            display: none;
+        }
+
+        #xpmenu strong {
+            display: block;
+            font-size: 1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #xpmenu .mu {
+            color: var(--mu);
+            font-size: .85rem;
+        }
+
+        #xpmenu .bar {
+            height: 10px;
+            background: var(--bg);
+            border-radius: 99px;
+            overflow: hidden;
+            margin: 10px 0 4px;
+        }
+
+        #xpmenu .bar i {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--xp);
+            border-radius: 99px;
+        }
+
+        #xpmenu a {
+            display: block;
+            text-align: center;
+            margin-top: 8px;
+            padding: 9px;
+            border-radius: 8px;
+            border: 1px solid var(--ln);
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        #xpmenu a:hover {
+            border-color: var(--ac);
+            background: var(--bg);
+        }
+
+        #xpmenu a.p {
+            background: var(--ac);
+            color: var(--acink);
+            border-color: var(--ac);
+        }
+
+        #menuAccount {
+            display: block;
+            padding: 5px 2px 10px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .menuDivider {
+            height: 1px;
+            background: var(--ln);
+            margin: 12px 0;
+        }
+
+        .menuSection {
+            color: var(--mu);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 12px 2px 5px;
+            text-transform: uppercase;
+        }
+
+        /* Homepage sections */
+        #welcomeMessage {
+            display: none;
+            color: white;
+            text-align: center;
+            margin: 12px 0 20px;
+            font-size: 18px;
+        }
+
+        #announcements {
+            display: none;
+            max-width: 900px;
+            margin: 15px auto;
+            color: white;
+        }
+
+        #communityEvent {
+            display: none;
+            max-width: 900px;
+            margin: 20px auto;
+            color: white;
+        }
+
+        #recentlyPlayed {
+            display: none;
+            color: white;
+            margin: 25px 20px;
+            padding: 18px 0;
+            border-top: 1px solid rgba(255,255,255,.35);
+            border-bottom: 1px solid rgba(255,255,255,.35);
+        }
+
+        #recentlyPlayed h2 {
+            text-align: center;
+            margin: 0 0 15px;
+        }
+
+        #recentGamesContainer {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .recentGame {
+            width: 150px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .recentGame img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .recentGame p {
+            margin: 6px 0;
+        }
+
+        #gamesHeading {
+            text-align: center;
+            color: white;
+        }
+
+        @media(max-width:600px) {
+            #xpbar {
+                top: 8px;
+                right: 8px;
+            }
+
+            #xpbtn {
+                max-width: 155px;
+            }
+
+            #xpmenu {
+                width: 230px;
+            }
+        }
     </style>
 </head>
+
 <body>
-<style>
-html, body {
-    background: transparent !important;
-}
-body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: #12142a url('background.gif') center/cover no-repeat;
-}
-</style>
-<style>
-#xpbar {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 50;
-    font: 14px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;
-    --s: #fff;
-    --ink: #161a2e;
-    --mu: #6a7090;
-    --ln: #dde0ec;
-    --ac: #2f4bff;
-    --acink: #fff;
-    --xp: #ffb400;
-    --bg: #eef0f6;
-}
-@media(prefers-color-scheme:dark) {
-    #xpbar {
-        --s: #1b1e3a;
-        --ink: #eef0ff;
-        --mu: #9298c0;
-        --ln: #2c3055;
-        --ac: #7c8dff;
-        --acink: #10132c;
-        --bg: #12142a;
-    }
-}
-#xpbtn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--s);
-    color: var(--ink);
-    border: 1px solid var(--ln);
-    border-radius: 99px;
-    padding: 5px 12px 5px 5px;
-    cursor: pointer;
-    font: inherit;
-    max-width: 200px;
-}
-#xpbtn:hover {
-    border-color: var(--ac);
-}
-#xpbtn:focus-visible,
-#xpmenu a:focus-visible {
-    outline: 3px solid var(--xp);
-    outline-offset: 2px;
-}
-#xpLvl {
-    background: var(--ac);
-    color: var(--acink);
-    border-radius: 99px;
-    min-width: 28px;
-    height: 28px;
-    display: grid;
-    place-items: center;
-    font-weight: 700;
-    padding: 0 6px;
-}
-#xpName {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
-}
-#xpmenu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    width: 240px;
-    background: var(--s);
-    color: var(--ink);
-    border: 1px solid var(--ln);
-    border-radius: 12px;
-    padding: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,.15);
-}
-#xpmenu[hidden] {
-    display: none;
-}
-#xpmenu strong {
-    display: block;
-    font-size: 1rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-#xpmenu .mu {
-    color: var(--mu);
-    font-size: .85rem;
-}
-#xpmenu .bar {
-    height: 10px;
-    background: var(--bg);
-    border-radius: 99px;
-    overflow: hidden;
-    margin: 10px 0 4px;
-}
-#xpmenu .bar i {
-    display: block;
-    height: 100%;
-    width: 0;
-    background: var(--xp);
-    border-radius: 99px;
-}
-#xpmenu a {
-    display: block;
-    text-align: center;
-    margin-top: 10px;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid var(--ln);
-    color: var(--ink);
-    text-decoration: none;
-    font-weight: 600;
-}
-#xpmenu a.p {
-    background: var(--ac);
-    color: var(--acink);
-    border-color: var(--ac);
-}
-</style>
-<div id="xpbar">
-    <button id="xpbtn" aria-haspopup="true" aria-expanded="false" aria-controls="xpmenu">
-        <span id="xpLvl">?</span>
-        <span id="xpName">Log in</span>
-    </button>
-    <div id="xpmenu" hidden>
-        <strong id="mName">Not on the board yet</strong>
-        <span class="mu" id="mSub">
-            Play a game to earn XP and get a rank.
-        </span>
-        <div class="bar">
-            <i id="mFill"></i>
+
+    <!-- Announcements: populated when the Website backend is connected -->
+    <section id="announcements" aria-label="Announcements"></section>
+
+    <!-- Existing XP button and dropdown menu -->
+    <div id="xpbar">
+
+        <button
+            id="xpbtn"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="xpmenu"
+        >
+            <span id="xpLvl">?</span>
+            <span id="xpName">Log in</span>
+        </button>
+
+        <div id="xpmenu" hidden>
+
+            <!-- Account information -->
+            <div id="menuAccount">Not logged in</div>
+
+            <div class="menuDivider"></div>
+
+            <!-- Existing XP information -->
+            <strong id="mName">Not on the board yet</strong>
+
+            <span class="mu" id="mSub">
+                Play a game to earn XP and get a rank.
+            </span>
+
+            <div class="bar">
+                <i id="mFill"></i>
+            </div>
+
+            <span class="mu" id="mXp"></span>
+
+            <a class="p" href="games-xp.html">
+                Leaderboard
+            </a>
+
+            <div class="menuDivider"></div>
+
+            <!-- Main navigation -->
+            <div class="menuSection">Navigation</div>
+
+            <a href="index.html">Home</a>
+            <a href="#gamesContainer">Games</a>
+            <a href="games-xp.html">Leaderboard</a>
+
+            <div class="menuDivider"></div>
+
+            <div class="menuSection">Account</div>
+
+            <a href="profile.html">My Profile</a>
+            <a href="social.html">Friends &amp; Social</a>
+
+            <div class="menuDivider"></div>
+
+            <div class="menuSection">Community</div>
+
+            <a href="chat.html">Global Chat</a>
+            <a href="tournaments.html">Tournaments</a>
+            <a href="#communityEvent">Community Events</a>
+            <a href="#announcements">Announcements</a>
+
+            <div class="menuDivider"></div>
+
+            <div class="menuSection">Website</div>
+
+            <a href="customization.html">Customization</a>
+
+            <!-- Authentication controls will be connected to the backend later -->
+            <div id="authMenuLinks">
+                <a href="games-xp.html">Log In / Sign Up</a>
+            </div>
+
         </div>
-        <span class="mu" id="mXp"></span>
-        <a class="p" id="mLb" href="games-xp.html">
-            Leaderboard
-        </a>
-        <a id="mPlay" href="games-xp.html">
-            Play games
-        </a>
     </div>
-</div>
-<script>
-(function() {
-    var KEY = 'gamehub-v1';
-    var $ = function(id) {
-        return document.getElementById(id);
-    };
-    var xpFor = function(n) {
-        return 50 * n * (n - 1);
-    };
-    var lvlOf = function(xp) {
-        return Math.floor((1 + Math.sqrt(1 + xp / 12.5)) / 2);
-    };
-    function paint() {
-        var me = {};
-        try {
-            me = JSON.parse(localStorage.getItem(KEY)) || {};
-        } catch(e) {}
-        if (!me.id) {
-            $('xpLvl').textContent = '?';
-            $('xpName').textContent = 'Log in';
-            $('mName').textContent = 'Not logged in';
+
+    <!-- Logo -->
+    <div class="center">
+        <h1 id="title">
+            <img
+                src="cyanide.png"
+                alt="cyanide"
+                style="max-width:400px;width:100%;height:auto;"
+            >
+        </h1>
+
+        <p id="subtitle">v1</p>
+    </div>
+
+    <!-- Personalized welcome -->
+    <div id="welcomeMessage"></div>
+
+    <!-- Active community event -->
+    <section
+        id="communityEvent"
+        aria-label="Community event"
+    ></section>
+
+    <!-- Recently played games -->
+    <section id="recentlyPlayed">
+        <h2>Recently Played</h2>
+        <div id="recentGamesContainer"></div>
+    </section>
+
+    <!-- Game search -->
+    <div class="center">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search games"
+            aria-label="Search games"
+        >
+    </div>
+
+    <h2 id="gamesHeading">Games</h2>
+
+    <!-- Existing game grid -->
+    <div id="gamesContainer"></div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <a style="font-weight:700">a site by </a>
+        <a
+            style="font-weight:700"
+            class="link"
+            href="https://dsc.gg"
+        >parcoil network</a>
+    </div>
+
+    <!-- Existing XP calculations and menu behavior -->
+    <script>
+    (function() {
+        var KEY = 'gamehub-v1';
+
+        var $ = function(id) {
+            return document.getElementById(id);
+        };
+
+        var xpFor = function(n) {
+            return 50 * n * (n - 1);
+        };
+
+        var lvlOf = function(xp) {
+            return Math.floor(
+                (1 + Math.sqrt(1 + xp / 12.5)) / 2
+            );
+        };
+
+        function paint() {
+            var me = {};
+
+            try {
+                me = JSON.parse(localStorage.getItem(KEY)) || {};
+            } catch(e) {}
+
+            if (!me.id) {
+                $('xpLvl').textContent = '?';
+                $('xpName').textContent = 'Log in';
+
+                $('mName').textContent = 'Not logged in';
+
+                $('mSub').textContent =
+                    'Log in or sign up to earn XP and get on the leaderboard.';
+
+                $('mFill').style.width = '0%';
+                $('mXp').textContent = '';
+
+                $('menuAccount').textContent = 'Not logged in';
+                $('welcomeMessage').style.display = 'none';
+
+                return;
+            }
+
+            var total = Number(me.total) || 0;
+            var lvl = lvlOf(total);
+            var lo = xpFor(lvl);
+            var hi = xpFor(lvl + 1);
+
+            $('xpLvl').textContent = lvl;
+            $('xpName').textContent = me.name || 'Player';
+
+            $('mName').textContent = me.name || 'Player';
+
             $('mSub').textContent =
-                'Log in or sign up to earn XP and get on the leaderboard.';
-            $('mFill').style.width = '0%';
-            $('mXp').textContent = '';
-            return;
+                'Level ' + lvl +
+                (me.streak ? ' · ' + me.streak + '-day streak' : '');
+
+            var progress = Math.max(
+                0,
+                Math.min(100, Math.round((total - lo) / (hi - lo) * 100))
+            );
+
+            $('mFill').style.width = progress + '%';
+
+            $('mXp').textContent =
+                (total - lo) + ' / ' + (hi - lo) +
+                ' XP to level ' + (lvl + 1);
+
+            $('menuAccount').textContent = me.name || 'Player';
+
+            $('welcomeMessage').textContent =
+                'Welcome back, ' + (me.name || 'Player') + '!';
+
+            $('welcomeMessage').style.display = 'block';
         }
-        var total = me.total || 0;
-        var lvl = lvlOf(total);
-        var lo = xpFor(lvl);
-        var hi = xpFor(lvl + 1);
-        $('xpLvl').textContent = lvl;
-        $('xpName').textContent = me.name || 'Player';
-        $('mName').textContent = me.name || 'Player';
-        $('mSub').textContent =
-            'Level ' + lvl +
-            (me.streak ? ' · ' + me.streak + '-day streak' : '');
-        $('mFill').style.width =
-            Math.round((total - lo) / (hi - lo) * 100) + '%';
-        $('mXp').textContent =
-            (total - lo) + ' / ' + (hi - lo) +
-            ' XP to level ' + (lvl + 1);
-    }
-    function toggle(open) {
-        $('xpmenu').hidden = !open;
-        $('xpbtn').setAttribute('aria-expanded', open);
-        if (open) paint();
-    }
-    $('xpbtn').onclick = function(e) {
-        e.stopPropagation();
-        toggle($('xpmenu').hidden);
-    };
-    document.addEventListener('click', function(e) {
-        if (!$('xpbar').contains(e.target)) {
-            toggle(false);
+
+        function toggle(open) {
+            $('xpmenu').hidden = !open;
+
+            $('xpbtn').setAttribute(
+                'aria-expanded',
+                String(open)
+            );
+
+            if (open) paint();
         }
-    });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') toggle(false);
-    });
-    window.addEventListener('storage', paint);
-    paint();
-})();
-</script>
-<div class="center">
-    <h1 id="title">
-        <img
-            src="cyanide.png"
-            alt="cyanide"
-            style="max-width: 400px; width: 100%; height: auto;"
-        />
-    </h1>
-    <p id="subtitle">v1</p>
-</div>
-<div class="center">
-    <input
-        type="text"
-        id="searchInput"
-        placeholder="Search games"
-    />
-</div>
-<div id="gamesContainer"></div>
-<div class="footer">
-    <a style="font-weight: 700">a site by </a>
-    <a
-        style="font-weight: 700"
-        class="link"
-        href="https://dsc.gg"
-    >parcoil network</a>
-</div>
+
+        $('xpbtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggle($('xpmenu').hidden);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!$('xpbar').contains(e.target)) {
+                toggle(false);
+            }
+        });
+
+        $('xpmenu').addEventListener('click', function(e) {
+            if (e.target.closest('a')) {
+                toggle(false);
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                toggle(false);
+            }
+        });
+
+        window.addEventListener('storage', paint);
+
+        paint();
+    })();
+    </script>
+
 </body>
 </html>
