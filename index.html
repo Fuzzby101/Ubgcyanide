@@ -36,7 +36,7 @@
             background: #12142a url('background.gif') center/cover no-repeat;
         }
 
-        /* Existing top-right menu and XP button */
+        /* XP menu */
         #xpbar {
             position: fixed;
             top: 12px;
@@ -200,6 +200,36 @@
             text-transform: uppercase;
         }
 
+        /* Notifications */
+        #notificationBar {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 100;
+        }
+
+        #notificationBtn {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.35);
+            background: rgba(20,22,48,.9);
+            color: white;
+            font-size: 19px;
+            cursor: pointer;
+        }
+
+        #notificationBtn:hover {
+            background: #30345c;
+        }
+
+        #notificationBtn:focus-visible {
+            outline: 3px solid #ffb400;
+            outline-offset: 3px;
+        }
+
         /* Homepage sections */
         #welcomeMessage {
             display: none;
@@ -207,6 +237,8 @@
             text-align: center;
             margin: 12px 0 20px;
             font-size: 18px;
+            font-weight: 700;
+            text-shadow: 0 2px 5px rgba(0,0,0,.7);
         }
 
         #announcements {
@@ -223,6 +255,7 @@
             color: white;
         }
 
+        /* Recently played */
         #recentlyPlayed {
             display: none;
             color: white;
@@ -248,6 +281,17 @@
             width: 150px;
             cursor: pointer;
             text-align: center;
+            transition: transform .2s ease;
+        }
+
+        .recentGame:hover {
+            transform: translateY(-3px);
+        }
+
+        .recentGame:focus-visible {
+            outline: 3px solid #4b87f7;
+            outline-offset: 4px;
+            border-radius: 10px;
         }
 
         .recentGame img {
@@ -279,16 +323,32 @@
             #xpmenu {
                 width: 230px;
             }
+
+            #notificationBar {
+                top: 8px;
+                left: 8px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Announcements: populated when the Website backend is connected -->
+    <!-- Notifications -->
+    <div id="notificationBar">
+        <a
+            href="work-in-progress.html?feature=Notifications"
+            id="notificationBtn"
+            aria-label="Notifications"
+            title="Notifications"
+            style="text-decoration:none;"
+        >🔔</a>
+    </div>
+
+    <!-- Announcements -->
     <section id="announcements" aria-label="Announcements"></section>
 
-    <!-- Existing XP button and dropdown menu -->
+    <!-- XP button and navigation menu -->
     <div id="xpbar">
 
         <button
@@ -303,12 +363,10 @@
 
         <div id="xpmenu" hidden>
 
-            <!-- Account information -->
             <div id="menuAccount">Not logged in</div>
 
             <div class="menuDivider"></div>
 
-            <!-- Existing XP information -->
             <strong id="mName">Not on the board yet</strong>
 
             <span class="mu" id="mSub">
@@ -327,7 +385,6 @@
 
             <div class="menuDivider"></div>
 
-            <!-- Main navigation -->
             <div class="menuSection">Navigation</div>
 
             <a href="index.html">Home</a>
@@ -338,25 +395,24 @@
 
             <div class="menuSection">Account</div>
 
-            <a href="profile.html">My Profile</a>
-            <a href="social.html">Friends &amp; Social</a>
+            <a href="work-in-progress.html?feature=My%20Profile">My Profile</a>
+            <a href="work-in-progress.html?feature=Friends%20%26%20Social">Friends &amp; Social</a>
 
             <div class="menuDivider"></div>
 
             <div class="menuSection">Community</div>
 
-            <a href="chat.html">Global Chat</a>
-            <a href="tournaments.html">Tournaments</a>
-            <a href="#communityEvent">Community Events</a>
-            <a href="#announcements">Announcements</a>
+            <a href="work-in-progress.html?feature=Global%20Chat">Global Chat</a>
+            <a href="work-in-progress.html?feature=Tournaments">Tournaments</a>
+            <a href="work-in-progress.html?feature=Community%20Events">Community Events</a>
+            <a href="work-in-progress.html?feature=Announcements">Announcements</a>
 
             <div class="menuDivider"></div>
 
             <div class="menuSection">Website</div>
 
-            <a href="customization.html">Customization</a>
+            <a href="work-in-progress.html?feature=Customization">Customization</a>
 
-            <!-- Authentication controls will be connected to the backend later -->
             <div id="authMenuLinks">
                 <a href="games-xp.html">Log In / Sign Up</a>
             </div>
@@ -380,13 +436,13 @@
     <!-- Personalized welcome -->
     <div id="welcomeMessage"></div>
 
-    <!-- Active community event -->
+    <!-- Community event -->
     <section
         id="communityEvent"
         aria-label="Community event"
     ></section>
 
-    <!-- Recently played games -->
+    <!-- Recently played -->
     <section id="recentlyPlayed">
         <h2>Recently Played</h2>
         <div id="recentGamesContainer"></div>
@@ -404,7 +460,7 @@
 
     <h2 id="gamesHeading">Games</h2>
 
-    <!-- Existing game grid -->
+    <!-- Game grid -->
     <div id="gamesContainer"></div>
 
     <!-- Footer -->
@@ -417,15 +473,161 @@
         >parcoil network</a>
     </div>
 
-    <!-- Existing XP calculations and menu behavior -->
+    <!-- XP menu and homepage functionality -->
     <script>
     (function() {
         var KEY = 'gamehub-v1';
+        var RECENT_KEY = 'cyanide-recently-played';
 
         var $ = function(id) {
             return document.getElementById(id);
         };
 
+        function getAccount() {
+            try {
+                return JSON.parse(localStorage.getItem(KEY)) || {};
+            } catch(e) {
+                return {};
+            }
+        }
+
+        function getAccountName(me) {
+            return me.name ||
+                me.username ||
+                me.displayName ||
+                me.display_name ||
+                '';
+        }
+
+        function getRecentKey() {
+            var me = getAccount();
+            return RECENT_KEY + ':' + (me.id || 'guest');
+        }
+
+        function readRecent() {
+            try {
+                var recent = JSON.parse(
+                    localStorage.getItem(getRecentKey())
+                );
+
+                return Array.isArray(recent) ? recent : [];
+            } catch(e) {
+                return [];
+            }
+        }
+
+        /* Recently Played */
+        function saveRecent(game) {
+            var recent = readRecent();
+
+            recent = recent.filter(function(item) {
+                return item.name !== game.name;
+            });
+
+            recent.unshift({
+                name: game.name,
+                image: game.image,
+                playedAt: Date.now()
+            });
+
+            recent = recent.slice(0, 5);
+
+            try {
+                localStorage.setItem(
+                    getRecentKey(),
+                    JSON.stringify(recent)
+                );
+            } catch(e) {
+                console.warn('Could not save recently played games:', e);
+            }
+
+            renderRecentlyPlayed();
+        }
+
+        function renderRecentlyPlayed() {
+            var container = $('recentGamesContainer');
+            var section = $('recentlyPlayed');
+
+            if (!container || !section) return;
+
+            var recent = readRecent();
+
+            container.innerHTML = '';
+
+            if (recent.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            recent.forEach(function(game) {
+                var card = document.createElement('div');
+                card.className = 'recentGame';
+                card.tabIndex = 0;
+                card.setAttribute('role', 'button');
+                card.setAttribute(
+                    'aria-label',
+                    'Play ' + game.name
+                );
+
+                var img = document.createElement('img');
+                img.src = game.image;
+                img.alt = game.name;
+
+                var name = document.createElement('p');
+                name.textContent = game.name;
+
+                card.appendChild(img);
+                card.appendChild(name);
+
+                function replayGame() {
+                    var gameImages = document.querySelectorAll(
+                        '#gamesContainer .game img'
+                    );
+
+                    var original = Array.from(gameImages).find(
+                        function(image) {
+                            return image.alt === game.name;
+                        }
+                    );
+
+                    if (original) {
+                        original.click();
+                    }
+                }
+
+                card.addEventListener('click', replayGame);
+
+                card.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        replayGame();
+                    }
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        /*
+         * Capture game-card clicks before the existing main.js
+         * click handler launches the game.
+         */
+        document.addEventListener('click', function(e) {
+            var image = e.target.closest(
+                '#gamesContainer .game img'
+            );
+
+            if (!image) return;
+
+            saveRecent({
+                name: image.alt,
+                image: image.getAttribute('src')
+            });
+        }, true);
+
+        /* XP calculations */
         var xpFor = function(n) {
             return 50 * n * (n - 1);
         };
@@ -436,12 +638,12 @@
             );
         };
 
+        /* Account and XP display */
         function paint() {
-            var me = {};
+            var me = getAccount();
+            var name = getAccountName(me);
 
-            try {
-                me = JSON.parse(localStorage.getItem(KEY)) || {};
-            } catch(e) {}
+            renderRecentlyPlayed();
 
             if (!me.id) {
                 $('xpLvl').textContent = '?';
@@ -467,9 +669,9 @@
             var hi = xpFor(lvl + 1);
 
             $('xpLvl').textContent = lvl;
-            $('xpName').textContent = me.name || 'Player';
+            $('xpName').textContent = name || 'Account';
 
-            $('mName').textContent = me.name || 'Player';
+            $('mName').textContent = name || 'Account';
 
             $('mSub').textContent =
                 'Level ' + lvl +
@@ -477,7 +679,10 @@
 
             var progress = Math.max(
                 0,
-                Math.min(100, Math.round((total - lo) / (hi - lo) * 100))
+                Math.min(
+                    100,
+                    Math.round((total - lo) / (hi - lo) * 100)
+                )
             );
 
             $('mFill').style.width = progress + '%';
@@ -486,14 +691,16 @@
                 (total - lo) + ' / ' + (hi - lo) +
                 ' XP to level ' + (lvl + 1);
 
-            $('menuAccount').textContent = me.name || 'Player';
+            $('menuAccount').textContent = name || 'Account';
 
-            $('welcomeMessage').textContent =
-                'Welcome back, ' + (me.name || 'Player') + '!';
+            $('welcomeMessage').textContent = name
+                ? 'Welcome back, ' + name + '!'
+                : 'Welcome back!';
 
             $('welcomeMessage').style.display = 'block';
         }
 
+        /* XP menu */
         function toggle(open) {
             $('xpmenu').hidden = !open;
 
@@ -528,7 +735,9 @@
             }
         });
 
+        /* Refresh account information when it changes */
         window.addEventListener('storage', paint);
+        window.addEventListener('focus', paint);
 
         paint();
     })();
